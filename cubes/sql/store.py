@@ -22,6 +22,13 @@ from ..errors import ArgumentError, StoreError, ConfigurationError
 from ..query import Drilldown, Cell
 from .utils import CreateTableAsSelect, CreateOrReplaceView
 from ..metadata import string_to_dimension_level
+import sqlite3
+from ../../../aggregate_functions.py import apply_aggregates
+
+def sqlite_memory_engine_creator():
+    con = sqlite3.connect("cube.sqlite")
+    apply_aggregates(con)
+    return con
 
 
 __all__ = [
@@ -157,10 +164,17 @@ class SQLStore(Store):
         self.options = coalesce_options(options, OPTION_TYPES)
         self.naming = distill_naming(self.options)
 
+        sqlite_prefix = "sqlite://"
+
         if not engine:
             # Process SQLAlchemy options
             sa_options = sqlalchemy_options(options)
-            engine = sa.create_engine(url, **sa_options)
+            if(url.startswith(sqlite_prefix)):
+                #url = url[len(sqlite_prefix):]
+                sa_options["creator"] = sqlite_memory_engine_creator
+                engine = sa.create_engine(url,  **sa_options)
+            else:
+                engine = sa.create_engine(url, **sa_options)
 
         self.logger = get_logger(name=__name__)
 
