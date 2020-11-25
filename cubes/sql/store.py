@@ -23,7 +23,7 @@ from ..query import Drilldown, Cell
 from .utils import CreateTableAsSelect, CreateOrReplaceView
 from ..metadata import string_to_dimension_level
 import sqlite3
-from ../../../aggregate_functions.py import apply_aggregates
+from aggregate_functions import apply_aggregates
 
 def sqlite_memory_engine_creator():
     con = sqlite3.connect("cube.sqlite")
